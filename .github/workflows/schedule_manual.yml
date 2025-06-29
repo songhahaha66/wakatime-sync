@@ -1,0 +1,22 @@
+name: Update gist with WakaTime summary
+on:
+  workflow_dispatch:
+    inputs:
+      date:
+        description: 'Date to fetch WakaTime data (YYYY-MM-DD format, leave empty for yesterday)'
+        required: false
+        type: string
+    
+jobs:
+  update-gist:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@master
+      - name: Update gist
+        uses: superman66/wakatime-sync@master
+        with:
+          date: ${{ github.event.inputs.date }}
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+          GIST_ID: ${{ secrets.GIST_ID}}
+          WAKATIME_API_KEY: ${{ secrets.WAKATIME_API_KEY }}

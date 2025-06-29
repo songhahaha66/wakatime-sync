@@ -1,5 +1,10 @@
 name: 'wakatime-sync'
 description: 'Back up your wakatime sync to your gist'
+inputs:
+  date:
+    description: 'The date to fetch WakaTime data for (YYYY-MM-DD format). If not provided, will use yesterday.'
+    required: false
+    default: ''
 branding:
   icon: 'clipboard'
   color: 'blue'

@@ -4,7 +4,7 @@ const dayjs = require('dayjs')
 const { Octokit } = require('@octokit/rest')
 const Axios = require('axios')
 
-const { WAKATIME_API_KEY, GH_TOKEN, GIST_ID, SCU_KEY } = process.env
+const { WAKATIME_API_KEY, GH_TOKEN, GIST_ID, SCU_KEY, INPUT_DATE } = process.env
 const BASE_URL = 'https://wakatime.com/api/v1'
 const summariesApi = `${BASE_URL}/users/current/summaries`
 const scuPushApi = `https://sctapi.ftqq.com`
@@ -84,20 +84,34 @@ async function sendMessageToWechat(text, desp) {
 }
 
 const fetchSummaryWithRetry = async times => {
-  const yesterday = dayjs()
-    .subtract(1, 'day')
-    .format('YYYY-MM-DD')
+  // 获取目标日期：优先使用传入的日期，否则使用昨天
+  let targetDate
+  if (INPUT_DATE && INPUT_DATE.trim()) {
+    // 验证日期格式
+    const inputDate = dayjs(INPUT_DATE, 'YYYY-MM-DD', true)
+    if (inputDate.isValid()) {
+      targetDate = inputDate.format('YYYY-MM-DD')
+      console.log(`Using input date: ${targetDate}`)
+    } else {
+      console.error(`Invalid date format: ${INPUT_DATE}. Using yesterday instead.`)
+      targetDate = dayjs().subtract(1, 'day').format('YYYY-MM-DD')
+    }
+  } else {
+    targetDate = dayjs().subtract(1, 'day').format('YYYY-MM-DD')
+    console.log(`Using default date (yesterday): ${targetDate}`)
+  }
+  
   try {
-    const mySummary = await getMySummary(yesterday)
-    await updateGist(yesterday, mySummary.data)
+    const mySummary = await getMySummary(targetDate)
+    await updateGist(targetDate, mySummary.data)
     await sendMessageToWechat(
-      `${yesterday} update successfully!`,
-      getMessageContent(yesterday, mySummary.data)
+      `${targetDate} update successfully!`,
+      getMessageContent(targetDate, mySummary.data)
     )
   } catch (error) {
     if (times === 1) {
       console.error(`Unable to fetch wakatime summary\n ${error} `)
-      return await sendMessageToWechat(`[${yesterday}]failed to update wakatime data!`)
+      return await sendMessageToWechat(`[${targetDate}]failed to update wakatime data!`)
     }
     console.log(`retry fetch summary data: ${times - 1} time`)
     fetchSummaryWithRetry(times - 1)
