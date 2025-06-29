@@ -13,7 +13,7 @@ jobs:
     steps:
       - uses: actions/checkout@master
       - name: Update gist
-        uses: superman66/wakatime-sync@master
+        uses: ./
         with:
           date: ${{ github.event.inputs.date }}
         env:
